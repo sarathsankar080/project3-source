@@ -2,13 +2,14 @@ pipeline {
     agent any
     
     tools{
-        maven "Maven-3.9.9"
+        jdk "JDK21"
+        maven "Maven3"
     }    
 
     stages {
         stage('Git Clone') {
             steps {
-               git branch: 'main', url: 'https://github.com/suffixscope/01_products_api.git'
+               git branch: 'main', url: url: 'https://github.com/sarathsankar080/project3-source.git'
             }
         }
         stage('Maven Build'){
@@ -18,16 +19,20 @@ pipeline {
         }
         stage('Docker Image'){
             steps{
-             sh 'docker build -t suffixscope/products_api .'
+             sh 'docker build -t sarath1221/products-api:latest .'
             }
         }
-        stage('Docker Image push'){
-            steps
-            withCredentials([string(credentialsId: 'docker_pwd', variable: 'docker_pwd')]) {
-                   sh 'docker login -u suffixscope -p ${docker_pwd}'
-                   sh 'docker push suffixscope/products_api'
+        stage('Docker Image Push') {
+            steps {
+             withCredentials([usernamePassword(
+             credentialsId: 'dockerhub',
+             usernameVariable: 'DOCKER_USER',
+             passwordVariable: 'DOCKER_PASS'
+        )]) {
+            sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+            sh 'docker push sarath1221/products-api:latest'
             }
-            }
+          }
         }
         stage('k8s deployment'){
             steps{
